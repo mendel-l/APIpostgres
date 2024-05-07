@@ -156,5 +156,31 @@ module.exports = {
             console.error('Error al eliminar el ticket:', error);
             res.status(500).json({ error: 'Error al eliminar el ticket' });
         }
-    }
+    },
+
+    // RECIBIR RESPUESTA DE MONGO
+    async handleMongoResponse(req, res) {
+        try {
+            const { correlativo, estado } = req.body;  // Asume que se envía el correlativo también
+    
+            // Validar los inputs
+            if (!correlativo || typeof estado !== 'number') {
+                return res.status(400).json({ message: 'Datos de entrada inválidos' });
+            }
+    
+            const ticket = await Ticket.findOne({ where: { id_ticket: correlativo } });
+            if (!ticket) {
+                return res.status(404).json({ message: 'Ticket no encontrado' });
+            }
+    
+            // Mapeo del estado recibido a los estados esperados
+            ticket.estado = estado === 1 ? 1 : (estado === 2 ? 2 : 0);
+            await ticket.save();
+    
+            res.status(200).json({ message: 'Estado del ticket actualizado correctamente', ticket });
+        } catch (error) {
+            console.error('Error al manejar la respuesta de MongoDB:', error);
+            res.status(500).json({ error: 'Error interno al manejar la respuesta de MongoDB' });
+        }
+    }    
 };
